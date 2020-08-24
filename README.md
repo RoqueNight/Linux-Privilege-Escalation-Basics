@@ -17,6 +17,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - Cron Jobs
 - Running Processes
 - NFS Root Squashing
+- Tmux
 
 
 # Basic System Enumeration
@@ -230,10 +231,10 @@ id && whoami
 ```
 # Sudo CVE
 
-Structure : Linux Command // <Comment / Tip>
 CVE-2019-14287
 
 ```
+sudo -V // Get sudo version
 sudo -l
 
    Vulnerable output 
@@ -244,10 +245,10 @@ sudo -l
     id && whoami
 
 ```
-Structure : Linux Command // <Comment / Tip>
 CVE-2019-16634
 
 ```
+sudo -V // Get sudo version
 sudo su root // If you type root's password , can you see the *****? That means pw_feedback is enabled
 Expliot PoC: https://github.com/saleemrashid/sudo-cve-2019-18634
 Download expliot.c
