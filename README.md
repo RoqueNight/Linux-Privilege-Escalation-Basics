@@ -14,7 +14,7 @@ Simple and accurate guide for linux privilege escalation tactics
 
 
 # Basic System Enumeration
-
+Structure : Linux Command # <Comment / Tip>
 ```
 uname -a | What OS kernel are we using?
 hostname | What is my hostname?
