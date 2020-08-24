@@ -15,6 +15,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - SUID / GUID Binaries
 - Capabilities
 - Cron Jobs
+- Running Processes
 - NFS Root Squashing
 
 
