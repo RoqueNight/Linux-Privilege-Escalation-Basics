@@ -415,10 +415,17 @@ Create a Simple Basic SUID binary
 
 # Capabilities
 
+Linux capabilities are special attributes in the Linux kernel that grant processes and binary executables specific privileges that are normally reserved for processes whose effective user ID is 0 (The root user, and only the root user, has UID 0).
+
+Capabilities are those permissions that divide the privileges of kernel user or kernel level programs into small pieces so that a process can be allowed sufficient power to perform specific privileged tasks.
+
+Essentially, the goal of capabilities is to divide the power of 'root' into specific privileges, so that if a process or binary that has one or more capability is exploited, the potential damage is limited when compared to the same process running as root.
+
+Capabilities can be set on processes and executable files. A process resulting from the execution of a file can gain the capabilities of that file.
+
 - Python
 - Perl
 - Tar
-
 
 Python
 
