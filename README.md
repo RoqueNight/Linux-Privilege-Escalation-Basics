@@ -398,23 +398,28 @@ Command: sudo LD_PRELOAD=/tmp/priv.so awk // awk can be replaced with any sudo b
 # SUID / GUID Binaries
 Structure : Linux Command // <Comment / Tip>
 
-```
+
 Basic Enumeration
 
+```
 ----------------------------------------------------------------------
 
-find / -perm -u=s -type f 2>/dev/null // Any Intresting binaries with SUID permissions?
-find / -perm -g=s -type f 2>/dev/null // Any Intresting binaries with GUID permissions?
-find / -perm -4000 -type f -exec ls -la {} 2>/dev/null \; // Any Intresting binaries for SUID permissions?
-find / -uid 0 -perm -4000 -type f 2>/dev/null // Any Intresting binaries for SUID permissions?
+find / -perm -u=s -type f 2>/dev/null 
+find / -perm -g=s -type f 2>/dev/null 
+find / -perm -4000 -type f -exec ls -la {} 2>/dev/null \;
+find / -uid 0 -perm -4000 -type f 2>/dev/null 
 
 // Look for any binaries that seem odd. Any binaries running from a users home directory?
 // Check the version of any odd binaries and see if there are any public expliots that can be used to gain root
 
-Create a Simple Basic SUID binary
+
 
 ---------------------------------------------------------------------
+```
 
+Create a Simple Basic SUID binary
+
+```
 
 ```
 
