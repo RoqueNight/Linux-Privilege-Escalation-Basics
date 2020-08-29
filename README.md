@@ -17,8 +17,8 @@ Simple and accurate guide for linux privilege escalation tactics
 - Cron Tabs & Scheduled Tasks
 - Capabilities
 - NFS Root Squashing
-- Tmux
 - chkrootkit 0.49
+- Tmux
 
 
 # Basic System Enumeration
