@@ -20,6 +20,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - NFS Root Squashing
 - chkrootkit 0.49
 - Tmux
+- MySQL Running as root
 
 
 # Basic System Enumeration
