@@ -6,6 +6,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - Basic System Enumeration
 - Bash History
 - OpenVPN Credentials
+- Credentials in tcpdump files
 - Writable Files
 - SSH Private Keys 
 - Kernel Expliots
@@ -22,7 +23,7 @@ Simple and accurate guide for linux privilege escalation tactics
 
 
 # Basic System Enumeration
-Structure : Linux Command // <Comment / Tip>
+
 ```
 uname -a 
 hostname 
@@ -38,7 +39,7 @@ find . -type f -exec grep -i -I "PASSWORD=" {} /dev/null \;
 locate pass | more
 ```
 # Bash History
-Structure : Linux Command // <Comment / Tip>
+
 ```
 history                            
 cat /home/<user>/.bash_history     
@@ -46,9 +47,15 @@ cat ~/.bash_history | grep -i passw
 ```
 
 # OpenVPN Credentials
-Structure : Linux Command // <Comment / Tip>
+
 ```
 locate *.ovpn                       
+```
+
+# Credentials in tcpdump files
+
+```
+tcpdump -nt -r capture.pcap -A 2>/dev/null | grep -P 'pwd='                    
 ```
 
 # Writable Password Files
@@ -58,7 +65,7 @@ If you have write permission to the following files:
 - /etc/shadow
 - /etc/sudoers
 
-Structure : Linux Command // <Comment / Tip>
+
 
 /etc/passwd
 ```
@@ -101,7 +108,7 @@ OR
    ```
 # SSH Private Keys 
 
-Structure : Linux Command / <Comment / Tip>
+
 
 ```
 find / -name authorized_keys 2> /dev/null              // Any Public Keys?
@@ -121,7 +128,7 @@ find / -name id_rsa 2> /dev/null                       // Any SSH private keys?
 
 # Kernel Expliots
 
-Structure : Linux Command // <Comment / Tip>
+
 ```
 uname -a // What OS kernel are we using?
 
@@ -376,7 +383,7 @@ id && whoami
 
 # Sudo LD_PRELOAD
 
-Structure : Linux Command // <Comment / Tip>
+
 
 sudo -l 
 
@@ -405,7 +412,7 @@ Command: sudo LD_PRELOAD=/tmp/priv.so awk // awk can be replaced with any sudo b
 ```
 
 # SUID / GUID Binaries Overview
-Structure : Linux Command // <Comment / Tip>
+
 
 SUID: Set User ID is a type of permission that allows users to execute a file with the permissions of a specified user. Those files which have suid permissions run with higher privileges.  Assume we are accessing the target system as a non-root user and we found suid bit enabled binaries, then those file/program/command can run with root privileges. 
 
