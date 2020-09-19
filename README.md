@@ -522,7 +522,7 @@ export PATH=/tmp:$PATH
 /home/max/test
 id && whoami
 ```
-Example 2
+Example 2 (Without full bin path)
 
 Privilege Escalation
 
@@ -549,7 +549,7 @@ export PATH=/tmp:$PATH
 id && whoami
 ```
 
-Example 3
+Example 3 (Without full bin path)
 
 Privilege Escalation
 
@@ -577,7 +577,7 @@ echo $PATH
 id && whoami
 ```
 
-Example 4
+Example 4 (With full bin path)
 
 Privilege Escalation
 
