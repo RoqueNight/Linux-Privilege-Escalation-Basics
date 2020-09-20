@@ -728,7 +728,7 @@ Output of Script:
 cd /var/www/html/
 tar czf /tmp/dbbackup.tar.gz *
 --------------------------------
-cd /var /www/html/
+cd /var/www/html/
 echo "#!/bin/bash" > priv.sh
 echo "chmod +s /bin/bash" >> priv.sh
 chmod +x priv.sh
