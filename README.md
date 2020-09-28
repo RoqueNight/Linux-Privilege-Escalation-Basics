@@ -19,7 +19,8 @@ Simple and accurate guide for linux privilege escalation tactics
 - Capabilities (Python - Perl - Tar - OpenSSL)
 - NFS Root Squashing
 - chkrootkit 0.49
-- Tmux
+- Tmux (Attach Session)
+- Screen (Attach Session)
 - MySQL Running as root
 - MySQL UDF (User-Defined Functions) Code (UDF) Injection
 
