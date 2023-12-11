@@ -634,7 +634,7 @@ Cron jobs is a time-based job scheduler in Unix-like computer operating systems.
 Enumeration
 
 ```
-contab -l
+crontab -l
 /etc/init.d
 /etc/cron*
 /etc/crontab
